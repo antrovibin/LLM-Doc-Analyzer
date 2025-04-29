@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Document Analyzer - Document Matcher</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #f9fafb;
+    }
+    .header {
+      background-color: #111827;
+      color: white;
+      padding: 20px 40px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      background-color: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
+    }
+    h2 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 20px;
+    }
+    textarea, input[type="file"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      margin-bottom: 20px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background-color: #f3f4f6;
+    }
+    button {
+      background-color: #2563eb;
+      color: white;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #1d4ed8;
+    }
+    .results {
+      margin-top: 30px;
+    }
+    .result-card {
+      padding: 16px;
+      margin-bottom: 15px;
+      border-radius: 10px;
+      background-color: #f1f5f9;
+      border-left: 4px solid #2563eb;
+    }
+    #loadingOverlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255, 255, 255, 0.9);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 500;
+      color: #111827;
+      z-index: 1000;
+    }
+    .spinner {
+      border: 6px solid #eee;
+      border-top: 6px solid #2563eb;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      margin-bottom: 15px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @media (max-width: 600px) {
+      .container { margin: 20px; padding: 20px; }
+      .header { padding: 15px 20px; font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">Document Analyzer - Matcher</div>
+
+  <div class="container">
+    <h2>Upload Document(s) for Analysis</h2>
+
+    <form id="documentForm" enctype="multipart/form-data">
+      <input type="file" id="files" name="files" accept=".docx" multiple required>
+      <button type="submit">🔍 Analyze Documents</button>
+    </form>
+
+    <div id="loadingOverlay">
+      <div class="spinner"></div>
+      <p>Analyzing document(s)... Please wait.</p>
+    </div>
+
+    <div class="results" id="results">
+      <!-- Document analysis results will appear here -->
+    </div>
+  </div>
+
+  <script>
+    const documentForm = document.getElementById('documentForm');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const resultsDiv = document.getElementById('results');
+
+    documentForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(documentForm);
+      loadingOverlay.style.display = 'flex';
+
+      try {
+        const res = await fetch('/analyze_documents', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+        loadingOverlay.style.display = 'none';
+        
+        resultsDiv.innerHTML = ""; // Clear previous results
+
+        if (data.length === 0) {
+          resultsDiv.innerHTML = "<p>No documents processed. Please try again.</p>";
+        } else {
+          data.forEach(doc => {
+            const card = document.createElement('div');
+            card.className = 'result-card';
+            card.innerHTML = `
+              <strong>Document: ${doc.filename}</strong><br>
+              <strong>Summary:</strong><br>
+              <p>${doc.summary || 'No summary available.'}</p>
+            `;
+            resultsDiv.appendChild(card);
+          });
+        }
+      } catch (err) {
+        loadingOverlay.style.display = 'none';
+        resultsDiv.innerHTML = "<p>Error occurred while analyzing the document(s). Please try again later.</p>";
+      }
+    });
+  </script>
+
+</body>
+</html>

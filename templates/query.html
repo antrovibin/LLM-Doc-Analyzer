@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Document Query</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #f9fafb;
+    }
+    .header {
+      background-color: #111827;
+      color: white;
+      padding: 20px 40px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      background-color: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
+    }
+    h2 {
+      margin-bottom: 10px;
+      font-size: 22px;
+      font-weight: 600;
+      color: #1f2937;
+    }
+    textarea, input[type="file"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      margin-bottom: 20px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background-color: #f3f4f6;
+    }
+    button {
+      background-color: #2563eb;
+      color: white;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #1d4ed8;
+    }
+    .results {
+      margin-top: 30px;
+    }
+    .result-card {
+      padding: 16px;
+      margin-bottom: 15px;
+      border-radius: 10px;
+      background-color: #f1f5f9;
+      border-left: 4px solid #2563eb;
+    }
+    .result-card strong {
+      font-weight: 600;
+      color: #111827;
+    }
+    #loadingOverlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255, 255, 255, 0.9);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 500;
+      color: #111827;
+      z-index: 1000;
+    }
+    .spinner {
+      border: 6px solid #eee;
+      border-top: 6px solid #2563eb;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      margin-bottom: 15px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @media (max-width: 600px) {
+      .container { margin: 20px; padding: 20px; }
+      .header { padding: 15px 20px; font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">Document Query</div>
+
+  <div class="container">
+    <h2>Upload a Document and Ask Your Query</h2>
+    <form id="queryForm">
+      <input type="file" id="file" name="file" accept=".docx" required>
+      <textarea id="query" name="query" rows="4" placeholder="Enter your query here..." required></textarea>
+      <button type="submit">🔍 Get Answer</button>
+    </form>
+
+    <div class="results">
+      <h2>📊 Query Result</h2>
+      <div id="results"></div>
+    </div>
+  </div>
+
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Analyzing document with AI... Please wait</p>
+  </div>
+
+  <script>
+    const loadingOverlay = document.getElementById('loadingOverlay');
+
+    document.getElementById('queryForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      loadingOverlay.style.display = 'flex';  // Show loading spinner
+
+      try {
+        // Send the form data to the backend '/query_document' route
+        const res = await fetch('/query_document', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+        loadingOverlay.style.display = 'none';  // Hide loading spinner
+
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = '';  // Clear previous results
+
+        if (data.answer) {
+          // Display the result
+          const card = document.createElement('div');
+          card.className = 'result-card';
+          card.innerHTML = `<strong>Answer for your query:</strong><br>${data.answer}`;
+          resultsDiv.appendChild(card);
+        } else {
+          resultsDiv.innerHTML = "<p>No relevant information found for your query in this document.</p>";
+        }
+      } catch (error) {
+        loadingOverlay.style.display = 'none';  // Hide loading spinner
+        alert('Error occurred while analyzing the document. Please try again later.');
+      }
+    });
+  </script>
+</body>
+</html>
