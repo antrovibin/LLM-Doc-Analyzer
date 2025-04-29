@@ -9,7 +9,7 @@ app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-MODEL_API_URL = 'http://192.168.27.106:1234/v1/completions'  # Ensure this URL points to your LM Studio model API
+MODEL_API_URL = 'http://193:1234/v1/completions'  # Ensure this URL points to your LM Studio model API
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
